@@ -1,5 +1,8 @@
 // FeedbackPreviewApp.jsx
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import ALL_PROPERTIES from './templates/code/properties.yaml';
+import DEFAULT_TEMPLATE from './templates/code/template.mustache';
+
 import Handlebars from 'handlebars';
 import { marked } from 'marked';
 import { 
@@ -15,123 +18,14 @@ import {
   Paper 
 } from '@mui/material';
 
-const DEFAULT_TEMPLATE = `
-{{#unless moderated}}
-Your code is off to a really amazing start 🚀🚀🚀!
-{{/unless}}
-
-{{#if rationale}}
-Hmm, {{> thecodeis}} still not passing all of its test cases. Let's dig into one possible reason why.
-{{/if}}
-
-{{#if structured}}### The Problem{{/if}}
-{{#if (eq error_id "identified")}}
-  {{#if supportive}}
-Right now, {{> thecodeis}} not asking the user for the 3 numbers to compare (or there's a mistake in that code).
-  {{else}}
-Right now, you are failing to correctly ask the user for 3 numbers to compare.
-  {{/if}}
-{{/if}}
-
-{{#if (eq error_id "guided")}}
-  {{#if supportive}}
-Remember, the instructions require you ask the user for 3 numbers to compare. How can you get input from the user?
-  {{else}}
-You are currently failing to follow the instructions. You must ask the user for 3 numbers to compare. Don't forget to do that.
-  {{/if}}
-{{/if}}
-
-{{#if actionable}}
-  {{#if granular}}
-Try the following steps:
-1. Use the \`input()\` function to read user input.
-2. Add a message for the user between the \`(\` and \`)\`. 
-3. Store the value in a variable.
-4. Try printing the variable, and test your code to make sure it works.
-  {{else}}
-Try using the \`input()\` function to ask the user for the value of 3 numbers and store these in variables.
-  {{/if}}
-  
-  {{#if not_revealing}}
-  To get the first number, use \`num1 = int(input('Enter the first number'))\`.
-  {{/if}}
-{{/if}}
-
-{{#if concept}}
-{{#if structured}}### The \`input\` function{{/if}}
-When you want to get input from the user, you can use the \`input\` function. 
-* \`input()\` takes an optional argument, which is the question you're asking the user. You can also leave it blank.
-* \`input()\` returns the user's answer, which you have to store in a variable to use later, like this: \`my_var = input()\`.
-* \`input()\` always returns a string. You may need to convert it to a different data type, like an integer, like this: number = int(input('Enter a number')).
-* Remember, \`input()\` is a function — to use it, you have to include the parentheses at the end.
-
-{{#if concept_link}}
-In this problem, we need to read user input to get values for the 3 numbers to compare, so we need the \`input()\` function.
-{{/if}}
-{{/if}}
-
-{{#unless concise}}
-The documentation for the \`input()\` function reads:
-
-> If the prompt argument is present, it is written to standard output without a trailing newline. The function then reads a line from input, converts it to a string (stripping a trailing newline), and returns that. When EOF is read, EOFError is raised.
-{{/unless}}
-
-{{#if resources}}
-Here's [a quick video](https://www.youtube.com/watch?v=SOLnbKI73Wo) on working with user input in python.
-{{/if}}
-
-{{#if example}}
-{{#if structured}}### Example{{/if}}
-Here's a simple example of the \`input()\` function:
-\`\`\`
-# Prints "What is your name?" and then waits for the user to type something,
-# then stores that text in the variable \`name\`
-name = input('What is your name?')
-# Use the variable name
-print('Hello, ' + name)
-\`\`\`
-{{/if}}
-
-{{#if feature_focus}}
-{{#if structured}}### Key take-away{{/if}}
-* **When** the instructions say something like "*read user input*"
-* **Then** we probably need to use the \`input()\` function.
-{{/if}}
-
-`;
-
 const THECODEIS_PARTIAL = `{{#if task_focused}}
 your code is
 {{else}}
 you are
 {{/if}}`;
 
-const ALL_PROPERTIES = [
-  { id: "error_id", name: "Error identification", values: ["identified", "guided", "false"] },
-  { id: "actionable" },
-  // { id: "correctness" },
-  { id: "granular", dependencies: ["actionable"] },
-  { id: "not_revealing", name: "Does not give away the answer" },
-  // { id: "learning", name: "Prioritizes learning" },
-  { id: "concise" },
-  { id: "task_focused" },
-  { id: "supportive", name: "Tone: Supportive", dependencies: ["error_id"] },
-  { id: "moderated", name: "Tone: Moderated", dependencies: ["error_id"] },
-  // { id: "interpretable" },
-  // { id: "vocab", name: "Appropriate Technical Vocabulary" },
-  { id: "structured" },
-  { id: "rationale" },
-  { id: "feature_focus", name: "Feature focusing" },
-  { id: "example", name: "Worked example" },
-  { id: "resources", name: "External resources" },
-  // { id: "strategies", name: "Metacognitive strategies" },
-  { id: "concept", name: "Conceptual explanation" },
-  { id: "concept_link", name: "Links the concept to the problem", dependencies: ["concept"] },
-  // { id: "sequence_alignment", name: "Alignment with instructor sequencing" },
-  // { id: "transfer", name: "Emphasizes knowledge transfer" },
-];
-
 function prettify(id) {
+  if (typeof id !== 'string') id = String(id);
   return id.charAt(0).toUpperCase() + id.slice(1).replace(/_/g, ' ');
 }
 
@@ -157,17 +51,6 @@ function getLeafNodes(el) {
   }
   return nodes;
 }
-
-// const renderer = new marked.Renderer();
-// renderer.code = function(code, language) {
-//   return `<pre><code class="language-${language || 'text'}">${code}</code></pre>`;
-// };
-
-// marked.setOptions({
-//   renderer: renderer,
-//   breaks: true,
-//   gfm: true
-// });
 
 export default function FeedbackPreviewApp() {
 

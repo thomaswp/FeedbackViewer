@@ -1,0 +1,48 @@
+- id: error_id
+  name: Error identification
+  values:
+    - identified
+    - guided
+    - false
+- id: actionable
+# - id: correctness
+- id: granular
+  dependencies:
+    - actionable
+- id: not_revealing
+  name: Does not give away the answer
+# - id: learning
+#   name: Prioritizes learning
+- id: concise
+- id: task_focused
+- id: supportive
+  name: 'Tone: Supportive'
+  dependencies:
+    - error_id
+- id: moderated
+  name: 'Tone: Moderated'
+  dependencies:
+    - error_id
+# - id: interpretable
+- id: vocab
+  name: Appropriate Technical Vocabulary
+- id: structured
+- id: rationale
+- id: feature_focus
+  name: Feature focusing
+- id: example
+  name: Worked example
+- id: resources
+  name: External resources
+# - id: strategies
+#   name: Metacognitive strategies
+- id: concept
+  name: Conceptual explanation
+- id: concept_link
+  name: Links the concept to the problem
+  dependencies:
+    - concept
+# - id: sequence_alignment
+#   name: Alignment with instructor sequencing
+# - id: transfer
+#   name: Emphasizes knowledge transfer
