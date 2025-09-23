@@ -8,7 +8,7 @@ export default defineConfig({
   plugins: [
     react(),
     string({
-      include: ["**/*.mustache"], // extensions you want
+      include: ["**/*.hbs"], // extensions you want
       compress: false,
     }),
     ViteYaml(),

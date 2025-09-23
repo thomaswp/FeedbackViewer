@@ -1,9 +1,9 @@
 // FeedbackPreviewApp.jsx
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import code_props from './templates/code/properties.yaml';
-import code_template from './templates/code/template.mustache';
+import code_template from './templates/code/template.hbs';
 import writing_props from './templates/writing/properties.yaml';
-import writing_template from './templates/writing/template.mustache';
+import writing_template from './templates/writing/template.hbs';
 
 import Handlebars from 'handlebars';
 import { marked } from 'marked';
@@ -274,12 +274,34 @@ export default function FeedbackPreviewApp() {
                 },
                 '& p': { mb: 2 },
                 '& ul, & ol': { pl: 3, mb: 2 },
-                '& code': { 
-                bgcolor: 'grey.100', 
-                px: 0.5, 
-                py: 0.25, 
-                borderRadius: 1,
-                fontFamily: 'monospace'
+                '& blockquote': {
+                  borderLeft: '4px solid',
+                  borderColor: 'grey.400',
+                  pl: 2,
+                  ml: 0,
+                  my: 2,
+                  fontStyle: 'italic',
+                  color: 'text.secondary'
+                },
+                '& code': {
+                  bgcolor: 'grey.200',
+                  px: '4px',
+                  py: '2px',
+                  borderRadius: '4px',
+                  fontFamily: 'monospace'
+                },
+                '& pre': {
+                  bgcolor: 'grey.100',
+                  border: '1px solid',
+                  borderColor: 'grey.300',
+                  borderRadius: '8px',
+                  p: 2,
+                  overflowX: 'auto',
+                },
+                '& pre > code': {
+                  bgcolor: 'transparent',
+                  p: 0,
+                  borderRadius: 0,
                 }
             }}
         >

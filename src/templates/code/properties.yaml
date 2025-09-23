@@ -1,3 +1,4 @@
+properties:
 - id: error_id
   name: Error identification
   values:
@@ -46,3 +47,5 @@
 #   name: Alignment with instructor sequencing
 # - id: transfer
 #   name: Emphasizes knowledge transfer
+
+profiles:
