@@ -23,8 +23,9 @@ import {
 const exampleTemplates = {
   code: {
     name: 'Code',
-    properties: code_props,
-    template: code_template
+    properties: code_props.properties,
+    template: code_template,
+    profiles: code_props.profiles,
   },
   writing: {
     name: 'Writing',
@@ -33,11 +34,6 @@ const exampleTemplates = {
     profiles: writing_props.profiles
   }
 };
-const default_template_settings = exampleTemplates.writing;
-
-const ALL_PROPERTIES = default_template_settings.properties;
-const ALL_PROFILES = default_template_settings.profiles || [];
-const DEFAULT_TEMPLATE = default_template_settings.template;
 
 // Not sure how to handle this when switching
 // const DEFAULT_TEMPLATE = localStorage.getItem('template') || default_template_settings.template;
@@ -77,29 +73,42 @@ function getLeafNodes(el) {
 }
 
 export default function FeedbackPreviewApp() {
+  const [templateKey, setTemplateKey] = useState('writing');
 
-  const getDefaultValues = () => {
-    return ALL_PROPERTIES.reduce((acc, prop) => {
+  const {
+    properties: allProperties,
+    profiles: allProfiles,
+    template: defaultTemplate
+  } = useMemo(() => {
+    const settings = exampleTemplates[templateKey];
+    return {
+      ...settings,
+      properties: settings.properties || [],
+      profiles: settings.profiles || []
+    };
+  }, [templateKey]);
+
+  const [values, setValues] = useState(null);
+  const [template, setTemplate] = useState(null);
+  const [selectedProfiles, setSelectedProfiles] = useState(null);
+  const renderRef = useRef(null);
+  const prevHashesRef = useRef(new Set());
+
+  useEffect(() => {
+    setValues(allProperties.reduce((acc, prop) => {
       if (prop.values) {
-        acc[prop.id] = prop.values[0]; // default to first value
+        acc[prop.id] = prop.values[0];
       } else {
         acc[prop.id] = true;
       }
       return acc;
-    }, {});
-  };
-
-  const [template, setTemplate] = useState(() => DEFAULT_TEMPLATE);
-  const [values, setValues] = useState(getDefaultValues());
-  const renderRef = useRef(null);
-  const prevHashesRef = useRef(new Set());
-
-  const [selectedProfiles, setSelectedProfiles] = useState(() => {
-    return ALL_PROFILES.reduce((acc, profile) => {
+    }, {}));
+    setTemplate(defaultTemplate);
+    setSelectedProfiles(allProfiles.reduce((acc, profile) => {
       acc[profile.id] = '';
       return acc;
-    }, {});
-  });
+    }, {}));
+  }, [templateKey, allProperties, allProfiles, defaultTemplate]);
 
   const updateValue = (id, val) => setValues(v => ({ ...v, [id]: val }));
 
@@ -108,14 +117,16 @@ export default function FeedbackPreviewApp() {
   };
 
   useEffect(() => {
-    const isAnyProfileSelected = ALL_PROFILES && Object.values(selectedProfiles).some(v => v);
+    if (!allProfiles || !selectedProfiles || !values) return;
+
+    const isAnyProfileSelected = allProfiles.length > 0 && Object.values(selectedProfiles).some(v => v);
     if (!isAnyProfileSelected) {
         return;
     }
 
     const newValues = { ...values };
 
-    ALL_PROPERTIES.forEach(prop => {
+    allProperties.forEach(prop => {
         if (prop.values) {
             return;
         }
@@ -137,10 +148,11 @@ export default function FeedbackPreviewApp() {
     });
 
     setValues(newValues);
-  }, [selectedProfiles]);
+  }, [selectedProfiles, allProperties, allProfiles]);
 
 
   useEffect(() => {
+    if (!template || !values) return;
     try {
       const compiled = Handlebars.compile(template);
       const newHtml = marked(compiled(values));
@@ -171,15 +183,33 @@ export default function FeedbackPreviewApp() {
   }, [template, values]);
 
   useEffect(() => {
-    localStorage.setItem('template', template);
+    if (template) {
+      localStorage.setItem('template', template);
+    }
   }, [template]);
+
+  if (!values || !template || !selectedProfiles) {
+    return null;
+  }
 
   return (
     <Box sx={{ display: 'flex', gap: 2, p: 2, minHeight: '100vh', bgcolor: 'grey.100' }}>
       <Box sx={{ width: '33%', display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <FormControl fullWidth>
+          <InputLabel>Template</InputLabel>
+          <Select
+            value={templateKey}
+            onChange={e => setTemplateKey(e.target.value)}
+            label="Template"
+          >
+            {Object.keys(exampleTemplates).map(key => (
+              <MenuItem key={key} value={key}>{exampleTemplates[key].name}</MenuItem>
+            ))}
+          </Select>
+        </FormControl>
         <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
           <Typography variant="h5" fontWeight="bold">Feedback Settings</Typography>
-          {ALL_PROPERTIES.map(prop => {
+          {allProperties.map(prop => {
             const name = prop.name || prettify(prop.id);
             const disabled = prop.dependencies?.some(dep => !values[dep]);
 
@@ -220,10 +250,10 @@ export default function FeedbackPreviewApp() {
           })}
         </Paper>
 
-        {ALL_PROFILES.length > 0 && (
+        {allProfiles.length > 0 && (
           <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
             <Typography variant="h5" fontWeight="bold">Profiles</Typography>
-            {ALL_PROFILES.map(profile => {
+            {allProfiles.map(profile => {
               const selectedValue = selectedProfiles[profile.id];
               const profileDescription = selectedValue
                 ? profile.values.find(v => v.id === selectedValue)?.description
