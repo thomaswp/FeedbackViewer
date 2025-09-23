@@ -28,7 +28,7 @@ const exampleTemplates = {
   },
   writing: {
     name: 'Writing',
-    properties: writing_props,
+    properties: writing_props.properties,
     template: writing_template
   }
 };

@@ -1,20 +1,53 @@
+properties:
 - id: growth_mindset
   name: Growth Mindset Message
+  triggers:
+  - student: [struggle, bottom]
 - id: confirm_correct
   name: Confirm Correct Choices
+  triggers:
+  - student: [struggle]
 - id: guided_discovery
   name: Guided Error Discovery
+  triggers:
+  - student: [strong]
 - id: hint
   name: Bottom-out Hint
+  triggers:
+  - student: [bottom]
 - id: refute_misconception
 # - id: contrasting_cases
 - id: strategies
   name: Teach strategies
+  triggers:
+  - student: [strong, average]
 - id: help
   name: Suggest Extra Help
+  triggers:
+  - student: [struggle, bottom]
 - id: feature_focusing
+  triggers:
+  - student: [average, struggle]
 - id: worked_example
+  triggers:
+  - student: [average, struggle, strong]
 - id: se_prompt
   name: Self-explanation prompt
+  triggers:
+  - student: [average, strong]
   dependencies:
   - worked_example
+
+profiles:
+- id: student
+  values:
+  - id: strong
+    name: Self-starter
+  - id: average
+    name: Average
+  - id: struggle
+    name: Struggling
+  - id: bottom
+    name: Wheel Spinning
+  
+
