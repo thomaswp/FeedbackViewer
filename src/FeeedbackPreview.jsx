@@ -1,7 +1,9 @@
 // FeedbackPreviewApp.jsx
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import ALL_PROPERTIES from './templates/code/properties.yaml';
-import DEFAULT_TEMPLATE from './templates/code/template.mustache';
+import code_props from './templates/code/properties.yaml';
+import code_template from './templates/code/template.mustache';
+import writing_props from './templates/writing/properties.yaml';
+import writing_template from './templates/writing/template.mustache';
 
 import Handlebars from 'handlebars';
 import { marked } from 'marked';
@@ -17,6 +19,26 @@ import {
   Box, 
   Paper 
 } from '@mui/material';
+
+const exampleTemplates = {
+  code: {
+    name: 'Code',
+    properties: code_props,
+    template: code_template
+  },
+  writing: {
+    name: 'Writing',
+    properties: writing_props,
+    template: writing_template
+  }
+};
+const default_template_settings = exampleTemplates.writing;
+
+const ALL_PROPERTIES = default_template_settings.properties;
+const DEFAULT_TEMPLATE = default_template_settings.template;
+
+// Not sure how to handle this when switching
+// const DEFAULT_TEMPLATE = localStorage.getItem('template') || default_template_settings.template;
 
 const THECODEIS_PARTIAL = `{{#if task_focused}}
 your code is
