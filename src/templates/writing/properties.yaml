@@ -43,11 +43,15 @@ profiles:
   values:
   - id: strong
     name: Self-starter
+    description: A strong, self-starting student who made an error they should be able to solve mostly independently. They're curious to learn more.
   - id: average
     name: Average
+    description: An average student.
   - id: struggle
-    name: Struggling
+    name: At-risk
+    description: A student with low prior knowledge in this domain who is at risk of performing poorly on this assignment but can still do it with help.
   - id: bottom
     name: Wheel Spinning
+    description: A student who is deeply stuck on this assignment and has already asked for feedback repeatedly.
   
 

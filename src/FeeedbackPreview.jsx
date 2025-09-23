@@ -29,12 +29,14 @@ const exampleTemplates = {
   writing: {
     name: 'Writing',
     properties: writing_props.properties,
-    template: writing_template
+    template: writing_template,
+    profiles: writing_props.profiles
   }
 };
 const default_template_settings = exampleTemplates.writing;
 
 const ALL_PROPERTIES = default_template_settings.properties;
+const ALL_PROFILES = default_template_settings.profiles || [];
 const DEFAULT_TEMPLATE = default_template_settings.template;
 
 // Not sure how to handle this when switching
@@ -92,7 +94,50 @@ export default function FeedbackPreviewApp() {
   const renderRef = useRef(null);
   const prevHashesRef = useRef(new Set());
 
+  const [selectedProfiles, setSelectedProfiles] = useState(() => {
+    return ALL_PROFILES.reduce((acc, profile) => {
+      acc[profile.id] = '';
+      return acc;
+    }, {});
+  });
+
   const updateValue = (id, val) => setValues(v => ({ ...v, [id]: val }));
+
+  const handleProfileChange = (profileId, value) => {
+    setSelectedProfiles(prev => ({ ...prev, [profileId]: value }));
+  };
+
+  useEffect(() => {
+    const isAnyProfileSelected = ALL_PROFILES && Object.values(selectedProfiles).some(v => v);
+    if (!isAnyProfileSelected) {
+        return;
+    }
+
+    const newValues = { ...values };
+
+    ALL_PROPERTIES.forEach(prop => {
+        if (prop.values) {
+            return;
+        }
+
+        let triggered = false;
+        if (prop.triggers) {
+            for (const trigger of prop.triggers) {
+                const dimension = Object.keys(trigger)[0];
+                const triggerValues = trigger[dimension];
+                const selectedValue = selectedProfiles[dimension];
+
+                if (selectedValue && triggerValues.includes(selectedValue)) {
+                    triggered = true;
+                    break;
+                }
+            }
+        }
+        newValues[prop.id] = triggered;
+    });
+
+    setValues(newValues);
+  }, [selectedProfiles]);
 
 
   useEffect(() => {
@@ -131,48 +176,87 @@ export default function FeedbackPreviewApp() {
 
   return (
     <Box sx={{ display: 'flex', gap: 2, p: 2, minHeight: '100vh', bgcolor: 'grey.100' }}>
-      <Paper sx={{ width: '33%', p: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
-        <Typography variant="h5" fontWeight="bold">Feedback Settings</Typography>
-        {ALL_PROPERTIES.map(prop => {
-          const name = prop.name || prettify(prop.id);
-          const disabled = prop.dependencies?.some(dep => !values[dep]);
+      <Box sx={{ width: '33%', display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <Typography variant="h5" fontWeight="bold">Feedback Settings</Typography>
+          {ALL_PROPERTIES.map(prop => {
+            const name = prop.name || prettify(prop.id);
+            const disabled = prop.dependencies?.some(dep => !values[dep]);
 
-          if (prop.values) {
+            if (prop.values) {
+              return (
+                <div key={prop.id} className="space-y-1">
+                  <FormControl fullWidth disabled={disabled} size="small">
+                    <InputLabel>{name}</InputLabel>
+                    <Select
+                      value={values[prop.id] || ''}
+                      onChange={e => updateValue(prop.id, e.target.value)}
+                      label={name}
+                    >
+                      {prop.values.map(val => (
+                        <MenuItem key={val} value={val}>{prettify(val)}</MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </div>
+              );
+            }
+
             return (
-              <div key={prop.id} className="space-y-1">
-                <FormControl fullWidth disabled={disabled} size="small">
-                  <InputLabel>{name}</InputLabel>
-                  <Select
-                    value={values[prop.id] || ''}
-                    onChange={e => updateValue(prop.id, e.target.value)}
-                    label={name}
-                  >
-                    {prop.values.map(val => (
-                      <MenuItem key={val} value={val}>{prettify(val)}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </div>
+              <FormControlLabel
+                key={prop.id}
+                control={
+                  <Switch
+                    checked={!!values[prop.id]}
+                    onChange={e => updateValue(prop.id, e.target.checked)}
+                    disabled={disabled}
+                  />
+                }
+                label={name}
+                labelPlacement="start"
+                sx={{ justifyContent: 'space-between', ml: 0 }}
+              />
             );
-          }
+          })}
+        </Paper>
 
-          return (
-            <FormControlLabel
-              key={prop.id}
-              control={
-                <Switch
-                  checked={!!values[prop.id]}
-                  onChange={e => updateValue(prop.id, e.target.checked)}
-                  disabled={disabled}
-                />
-              }
-              label={name}
-              labelPlacement="start"
-              sx={{ justifyContent: 'space-between', ml: 0 }}
-            />
-          );
-        })}
-      </Paper>
+        {ALL_PROFILES.length > 0 && (
+          <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <Typography variant="h5" fontWeight="bold">Profiles</Typography>
+            {ALL_PROFILES.map(profile => {
+              const selectedValue = selectedProfiles[profile.id];
+              const profileDescription = selectedValue
+                ? profile.values.find(v => v.id === selectedValue)?.description
+                : '';
+
+              return (
+                <div key={profile.id}>
+                  <FormControl fullWidth size="small" sx={{ mt: 1 }}>
+                    <InputLabel>{prettify(profile.id)}</InputLabel>
+                    <Select
+                      value={selectedValue || ''}
+                      onChange={e => handleProfileChange(profile.id, e.target.value)}
+                      label={prettify(profile.id)}
+                    >
+                      <MenuItem value="">
+                        <em>None</em>
+                      </MenuItem>
+                      {profile.values.map(val => (
+                        <MenuItem key={val.id} value={val.id}>{val.name}</MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                  {profileDescription && (
+                    <Typography variant="body2" sx={{ mt: 1, color: 'text.secondary' }}>
+                      {profileDescription}
+                    </Typography>
+                  )}
+                </div>
+              );
+            })}
+          </Paper>
+        )}
+      </Box>
 
       <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
         <Typography variant="h5" fontWeight="bold">Rendered Feedback</Typography>
