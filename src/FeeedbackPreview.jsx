@@ -133,12 +133,15 @@ export default function FeedbackPreviewApp() {
 
         let triggered = false;
         if (prop.triggers) {
-            for (const trigger of prop.triggers) {
-                const dimension = Object.keys(trigger)[0];
-                const triggerValues = trigger[dimension];
-                const selectedValue = selectedProfiles[dimension];
+            for (const triggerGroup of prop.triggers) {
+                const dimensionsInGroup = Object.keys(triggerGroup);
+                const allInGroupMatch = dimensionsInGroup.every(dimension => {
+                    const triggerValues = triggerGroup[dimension];
+                    const selectedValue = selectedProfiles[dimension];
+                    return selectedValue && triggerValues.includes(selectedValue);
+                });
 
-                if (selectedValue && triggerValues.includes(selectedValue)) {
+                if (allInGroupMatch) {
                     triggered = true;
                     break;
                 }

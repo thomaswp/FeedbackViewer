@@ -16,6 +16,8 @@ properties:
   triggers:
   - student: [bottom]
 - id: refute_misconception
+  triggers:
+  - history: [repeat]
 # - id: contrasting_cases
 - id: strategies
   name: Teach strategies
@@ -37,6 +39,15 @@ properties:
   - student: [average, strong]
   dependencies:
   - worked_example
+- id: extra
+  name: Extra Details
+  triggers:
+  - student: [strong]
+  - history: [mastery]
+- id: shorten
+  name: Keep it Brief
+  triggers:
+  - history: [mastery]
 
 profiles:
 - id: student
@@ -53,5 +64,11 @@ profiles:
   - id: bottom
     name: Wheel Spinning
     description: A student who is deeply stuck on this assignment and has already asked for feedback repeatedly.
-  
-
+- id: history
+  values:
+  - id: repeat
+    name: Repeated Error
+    description: The student has made this error multiple times recently.
+  - id: mastery
+    name: Mastery
+    description: The student has already mastered this skill previously.
