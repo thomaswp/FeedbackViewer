@@ -93,6 +93,7 @@ export default function FeedbackPreviewApp() {
   const [selectedProfiles, setSelectedProfiles] = useState(null);
   const renderRef = useRef(null);
   const prevHashesRef = useRef(new Set());
+  const rightPaneRef = useRef(null);
 
   useEffect(() => {
     setValues(allProperties.reduce((acc, prop) => {
@@ -156,6 +157,10 @@ export default function FeedbackPreviewApp() {
 
   useEffect(() => {
     if (!template || !values) return;
+
+    const rightPane = rightPaneRef.current;
+    const scrollPos = rightPane ? rightPane.scrollTop : 0;
+
     try {
       const compiled = Handlebars.compile(template);
       const newHtml = marked(compiled(values));
@@ -183,6 +188,10 @@ export default function FeedbackPreviewApp() {
         renderRef.current.innerHTML = `<pre>Error rendering template:\n${e.message}</pre>`;
       }
     }
+
+    if (rightPane) {
+      rightPane.scrollTop = scrollPos;
+    }
   }, [template, values]);
 
   useEffect(() => {
@@ -196,9 +205,9 @@ export default function FeedbackPreviewApp() {
   }
 
   return (
-    <Box sx={{ display: 'flex', gap: 2, p: 2, minHeight: '100vh', bgcolor: 'grey.100' }}>
-      <Box sx={{ width: '33%', display: 'flex', flexDirection: 'column', gap: 2 }}>
-        <FormControl fullWidth>
+    <Box sx={{ display: 'flex', gap: 2, p: 2, height: '100vh', bgcolor: 'grey.100' }}>
+      <Box sx={{ width: '33%', display: 'flex', flexDirection: 'column', gap: 2, overflowY: 'auto' }}>
+        <FormControl fullWidth sx={{ mt: 2 }}>
           <InputLabel>Template</InputLabel>
           <Select
             value={templateKey}
@@ -210,51 +219,9 @@ export default function FeedbackPreviewApp() {
             ))}
           </Select>
         </FormControl>
-        <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <Typography variant="h5" fontWeight="bold">Feedback Settings</Typography>
-          {allProperties.map(prop => {
-            const name = prop.name || prettify(prop.id);
-            const disabled = prop.dependencies?.some(dep => !values[dep]);
-
-            if (prop.values) {
-              return (
-                <div key={prop.id} className="space-y-1">
-                  <FormControl fullWidth disabled={disabled} size="small">
-                    <InputLabel>{name}</InputLabel>
-                    <Select
-                      value={values[prop.id] || ''}
-                      onChange={e => updateValue(prop.id, e.target.value)}
-                      label={name}
-                    >
-                      {prop.values.map(val => (
-                        <MenuItem key={val} value={val}>{prettify(val)}</MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </div>
-              );
-            }
-
-            return (
-              <FormControlLabel
-                key={prop.id}
-                control={
-                  <Switch
-                    checked={!!values[prop.id]}
-                    onChange={e => updateValue(prop.id, e.target.checked)}
-                    disabled={disabled}
-                  />
-                }
-                label={name}
-                labelPlacement="start"
-                sx={{ justifyContent: 'space-between', ml: 0 }}
-              />
-            );
-          })}
-        </Paper>
-
+        
         {allProfiles.length > 0 && (
-          <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
             <Typography variant="h5" fontWeight="bold">Profiles</Typography>
             {allProfiles.map(profile => {
               const selectedValue = selectedProfiles[profile.id];
@@ -289,18 +256,57 @@ export default function FeedbackPreviewApp() {
             })}
           </Paper>
         )}
+
+        <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <Typography variant="h5" fontWeight="bold">Feedback Settings</Typography>
+          {allProperties.map(prop => {
+            const name = prop.name || prettify(prop.id);
+            const disabled = prop.dependencies?.some(dep => !values[dep]);
+
+            if (prop.values) {
+              return (
+                <FormControl fullWidth disabled={disabled} size="small" key={prop.id}>
+                  <InputLabel>{name}</InputLabel>
+                  <Select
+                    value={values[prop.id] || ''}
+                    onChange={e => updateValue(prop.id, e.target.value)}
+                    label={name}
+                  >
+                    {prop.values.map(val => (
+                      <MenuItem key={val} value={val}>{prettify(val)}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              );
+            }
+
+            return (
+              <FormControlLabel
+                key={prop.id}
+                control={
+                  <Switch
+                    checked={!!values[prop.id]}
+                    onChange={e => updateValue(prop.id, e.target.checked)}
+                    disabled={disabled}
+                  />
+                }
+                label={name}
+                labelPlacement="start"
+                sx={{ justifyContent: 'space-between', ml: 0 }}
+              />
+            );
+          })}
+        </Paper>
       </Box>
 
-      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
-        <Typography variant="h5" fontWeight="bold">Rendered Feedback</Typography>
-        <Typography
-            component="div"
-            variant="body1"
+      <Box ref={rightPaneRef} sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2, overflowY: 'auto' }}>
+        <Paper
             ref={renderRef}
-            sx={{
-                p: 3,
+            sx={theme => ({
+                ...theme.typography.body1,
+                p: 2,
                 '& h1, & h2, & h3, & h4, & h5, & h6': {
-                fontFamily: 'theme.typography.h4.fontFamily',
+                fontFamily: theme.typography.h4.fontFamily,
                 fontWeight: 'bold',
                 mb: 2,
                 mt: 3
@@ -336,12 +342,8 @@ export default function FeedbackPreviewApp() {
                   p: 0,
                   borderRadius: 0,
                 }
-            }}
-        >
-          <Paper
-            ref={renderRef}
-          />
-        </Typography>
+            })}
+        />
 
         <Typography variant="h5" fontWeight="bold" sx={{ mt: 4 }}>Edit Template</Typography>
         <TextField
@@ -366,4 +368,5 @@ export default function FeedbackPreviewApp() {
       `}</style>
     </Box>
   );
+
 }
