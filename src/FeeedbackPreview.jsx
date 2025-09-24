@@ -205,7 +205,7 @@ export default function FeedbackPreviewApp() {
   }
 
   return (
-    <Box sx={{ display: 'flex', gap: 2, p: 2, height: '100vh', bgcolor: 'grey.100' }}>
+    <Box sx={{ display: 'flex', gap: 2, p: 2, height: '100vh', bgcolor: 'grey.100', boxSizing: 'border-box' }}>
       <Box sx={{ width: '33%', display: 'flex', flexDirection: 'column', gap: 2, overflowY: 'auto' }}>
         <FormControl fullWidth sx={{ mt: 2 }}>
           <InputLabel>Template</InputLabel>
@@ -231,7 +231,7 @@ export default function FeedbackPreviewApp() {
 
               return (
                 <div key={profile.id}>
-                  <FormControl fullWidth size="small" sx={{ mt: 1 }}>
+                  <FormControl fullWidth size="medium" sx={{ mt: 1 }}>
                     <InputLabel>{prettify(profile.id)}</InputLabel>
                     <Select
                       value={selectedValue || ''}
@@ -257,7 +257,7 @@ export default function FeedbackPreviewApp() {
           </Paper>
         )}
 
-        <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
+        <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
           <Typography variant="h5" fontWeight="bold">Feedback Settings</Typography>
           {allProperties.map(prop => {
             const name = prop.name || prettify(prop.id);
@@ -285,6 +285,7 @@ export default function FeedbackPreviewApp() {
                 key={prop.id}
                 control={
                   <Switch
+                    size="small"
                     checked={!!values[prop.id]}
                     onChange={e => updateValue(prop.id, e.target.checked)}
                     disabled={disabled}
